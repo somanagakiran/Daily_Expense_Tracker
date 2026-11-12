@@ -173,3 +173,164 @@ Props trick: **Summary** gets *expenses + total*. **Form** gets *editItem, setEd
 | `EADDRINUSE: port 5000` | Close the old terminal (Ctrl+C) or restart VS Code, then run again |
 | Browser didn't open | Open http://localhost:5173 yourself |
 | Page shows but no data | Check that the terminal shows `[server] Server running on port 5000` |
+
+---
+
+## EXAM DAY — STEP BY STEP
+
+**Before the exam:** read these notes once, and write server.js and App.jsx once from memory.
+
+**Step 1: write the paper first.** Aim → Procedure → App.jsx → server.js → Expected output. Leave Original output empty for now.
+
+**Step 2: check the PC.** In VS Code, open the terminal (menu Terminal → New Terminal) and run `node -v` and `git -v`. Both must show a version number.
+
+**Step 3: clone and run**
+```
+cd Desktop
+git clone https://github.com/somanagakiran/Daily_Expense_Tracker.git
+cd Daily_Expense_Tracker
+npm install
+npm run dev
+```
+Wait for **both** lines: `[server] Server running on port 5000` and `Local: http://localhost:5173/`.
+
+**Step 4: show the examiner, in this order**
+1. **Add:** Lunch, ₹100, Food → Add Expense → the total increases
+2. **Edit:** change it to ₹150 → Update → the change shows
+3. **Delete:** click Delete and confirm → it is removed and the total decreases
+4. **Validation:** click Add with an empty description → an error message shows
+5. **Extras:** budget bar, category bars, 7-day chart, search, filter, Export CSV, dark mode
+6. **Data is saved:** Ctrl + C → `npm run dev` again → refresh → the data is still there
+
+**Step 5:** write the Original output.
+
+---
+
+## VIVA QUESTIONS & ANSWERS
+
+### About the project
+
+**Q: Why did you choose this project?**
+> Many people spend money every day on food, travel and bills, but they don't track it, so at the end of the month they don't know where the money went. My app records daily expenses and shows the spending clearly, so the user can control their budget. It is also a good full-stack project because it uses all four CRUD operations.
+
+**Q: What is unique in your project?**
+> 1. Edit/update of expenses, not just add and delete
+> 2. A monthly budget with a progress bar that turns green, orange or red
+> 3. Category-wise spending and a last 7 days chart, made without any chart library
+> 4. Search, filter by category and month, and sorting
+> 5. Export to CSV, which opens in Excel
+> 6. Validation on both the frontend and the backend
+> 7. Dark mode and a mobile-friendly design
+> 8. Data stays saved in a JSON file, so no database setup is needed
+
+**Q: What technologies did you use?**
+> React with Vite for the frontend, Node.js with Express for the backend, a JSON file for storage, and Git and GitHub for version control.
+
+### Backend (server.js)
+
+**Q: What is GET?**
+> It is used to **read** data. `GET /api/expenses` returns all expenses.
+
+**Q: What is POST?**
+> It is used to **add** new data. `POST /api/expenses` adds an expense.
+
+**Q: What is PUT?**
+> It is used to **update** data. `PUT /api/expenses/:id` updates the expense with that id.
+
+**Q: What is DELETE?**
+> It is used to **remove** data. `DELETE /api/expenses/:id` deletes that expense.
+
+**Q: What is CRUD?**
+> Create, Read, Update, Delete, which are POST, GET, PUT and DELETE.
+
+**Q: What is Express?**
+> A Node.js framework that makes it easy to create a server and APIs.
+
+**Q: What is middleware?**
+> A function that runs **before** the route handler. `express.json()` reads the JSON body, `cors()` allows requests from the frontend, and `validate` checks the input and calls `next()` if the data is valid.
+
+**Q: Why use cors?**
+> The frontend (5173) and backend (5000) run on different ports. The browser blocks these requests by default, and CORS allows them.
+
+**Q: What is express.json()?**
+> It converts the JSON request body into a JavaScript object, so we can use `req.body`.
+
+**Q: What are req and res?**
+> `req` is the request coming from the client. `res` is the response we send back.
+
+**Q: What is req.params.id?**
+> The id taken from the URL. For example, in `/api/expenses/123`, the id is 123.
+
+**Q: What are status codes?**
+> 200 = OK, 201 = Created, 400 = Bad request (invalid data), 404 = Not found, 500 = Server error.
+
+**Q: Where is the data stored?**
+> In `data/expenses.json`. `readData()` reads the file and `saveData()` writes it, using Node's `fs` module.
+
+**Q: Why not MongoDB?**
+> For a small personal tracker, a JSON file is enough and needs no installation. It can be moved to MongoDB later.
+
+**Q: How is the id created?**
+> With `Date.now()`, the current time in milliseconds, so every id is unique.
+
+**Q: What are map, filter and spread?**
+> Spread `[...old, new]` adds an item (POST). `map` changes an item (PUT). `filter` removes an item (DELETE).
+
+### Frontend (App.jsx)
+
+**Q: What is React?**
+> A JavaScript library for building user interfaces using components.
+
+**Q: What is a component?**
+> A reusable piece of the UI. Mine are Navbar, Summary, ExpenseForm and ExpenseList.
+
+**Q: What is useState?**
+> A hook that stores data that can change. When it changes, React updates the screen. I use it for `expenses` and `editItem`.
+
+**Q: What is useEffect?**
+> A hook that runs code after the component loads. I use it to fetch expenses when the page opens. The `[]` means it runs only once.
+
+**Q: What are props?**
+> They pass data from a parent component to a child. For example, `expenses` is passed to ExpenseList.
+
+**Q: What is fetch?**
+> A browser function used to call APIs. I use it to call my backend.
+
+**Q: What is async/await?**
+> It waits for a task, like an API call, to finish before going to the next line.
+
+**Q: What is reduce?**
+> It combines all the array items into one value. I use it to calculate the total amount.
+
+**Q: What is JSX?**
+> HTML-like syntax written inside JavaScript in React.
+
+**Q: What is Vite?**
+> A fast development server and build tool for React. It runs the frontend on port 5173.
+
+**Q: What is the proxy in vite.config.js?**
+> It sends all `/api` requests from the frontend to the backend at `localhost:5000`.
+
+### Git & npm
+
+**Q: What are Git and GitHub?**
+> Git is a version control system that tracks changes in code. GitHub is a website that stores Git repositories online.
+
+**Q: Explain the git commands.**
+> - `git init`: create a new repository
+> - `git add .`: add all files to staging
+> - `git commit -m "msg"`: save a snapshot with a message
+> - `git remote add origin <url>`: link to GitHub
+> - `git push`: upload to GitHub
+> - `git clone <url>`: download the repo to a new PC
+
+**Q: What does npm install do?**
+> It installs all the packages listed in `package.json`.
+
+**Q: What does npm run dev do?**
+> It starts both the backend and the frontend together using `concurrently`.
+
+### Viva tips
+- Give one- or two-line simple answers.
+- If you don't know, say: "I'm not sure, sir, but I think…"
+- Point to the screen while you explain.
