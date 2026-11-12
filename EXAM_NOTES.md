@@ -93,34 +93,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/api/expenses", (req, res) => {
-  res.json(readData());
+app.get("/api/expenses", (req, res) => res.json(readData()));
+
+app.post("/api/expenses", validate, (req, res) => {
+  const expense = { id: Date.now().toString(), ...req.body };
+  saveData([...readData(), expense]);
+  res.status(201).json(expense);
 });
 
-app.post("/api/expenses", (req, res) => {
-  const error = validate(req.body);
-  if (error) return res.status(400).json({ message: error });
-  const expenses = readData();
-  const newExpense = { id: Date.now().toString(), ...req.body, amount: Number(req.body.amount) };
-  expenses.push(newExpense);
+app.put("/api/expenses/:id", validate, (req, res) => {
+  const expenses = readData().map((e) => (e.id === req.params.id ? { ...e, ...req.body } : e));
   saveData(expenses);
-  res.status(201).json(newExpense);
-});
-
-app.put("/api/expenses/:id", (req, res) => {
-  const error = validate(req.body);
-  if (error) return res.status(400).json({ message: error });
-  const expenses = readData();
-  const index = expenses.findIndex((e) => e.id === req.params.id);
-  if (index === -1) return res.status(404).json({ message: "Expense not found" });
-  expenses[index] = { ...expenses[index], ...req.body, amount: Number(req.body.amount) };
-  saveData(expenses);
-  res.json(expenses[index]);
+  res.json({ message: "Expense updated" });
 });
 
 app.delete("/api/expenses/:id", (req, res) => {
-  const expenses = readData().filter((e) => e.id !== req.params.id);
-  saveData(expenses);
+  saveData(readData().filter((e) => e.id !== req.params.id));
   res.json({ message: "Expense deleted" });
 });
 
@@ -152,13 +140,18 @@ app.listen(5000, () => console.log("Server running on port 5000"));
 |---|---|---|
 | 1 | 5 requires | express, cors, `{ readData, saveData }`, validate, budgetRoutes |
 | 2 | app + 2 middlewares | `app.use(cors())`, `app.use(express.json())` |
-| 3 | **GET** | `res.json(readData())` |
-| 4 | **POST** | validate → read → push newExpense (id = Date.now) → save → 201 |
-| 5 | **PUT** | validate → read → findIndex → 404 if -1 → replace → save |
-| 6 | **DELETE**, budget route and listen | filter out the id → save; `app.listen(5000)` |
+| 3 | **GET** (1 line) | `res.json(readData())` |
+| 4 | **POST** (3 lines) | make expense with `id: Date.now()` → save `[...old, new]` → 201 |
+| 5 | **PUT** (3 lines) | `map`: if id matches, merge `{ ...e, ...req.body }` → save → "updated" |
+| 6 | **DELETE** (2 lines), budget route, listen | `filter` out the id → save; `app.listen(5000)` |
 
-Trick: **G-P-P-D** = Get, Post, Put, Delete (the same order as CRUD: Read, Create, Update, Delete).
-POST and PUT both start with the same 2 lines: `const error = validate(req.body); if (error) return ...400`.
+Trick: **G-P-P-D** = Get, Post, Put, Delete.
+- **POST and PUT have `validate`** between the URL and `(req, res)`. It is a middleware that checks the data (400 error) and, for PUT, whether the id exists (404 error).
+- **POST adds** → spread `[...readData(), expense]`
+- **PUT changes** → `map`
+- **DELETE removes** → `filter`
+
+Viva answer: *"`validate` is a middleware. It runs before the route, checks the input and calls `next()` if the data is valid."*
 
 ### App.jsx — 5 blocks
 | # | Block | Key line |

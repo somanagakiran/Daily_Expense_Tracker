@@ -148,5 +148,14 @@
     "payment": "Card",
     "note": "",
     "createdAt": "2026-10-05T10:00:00.000Z"
+  },
+  {
+    "id": "1794489500364",
+    "title": "Bus pass recharge",
+    "amount": 450,
+    "category": "Travel",
+    "date": "2026-11-10",
+    "payment": "Cash",
+    "note": ""
   }
 ]
