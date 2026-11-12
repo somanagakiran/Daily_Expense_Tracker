@@ -1,0 +1,152 @@
+[
+  {
+    "id": "1790812800000",
+    "title": "Lunch at canteen",
+    "amount": 120,
+    "category": "Food",
+    "date": "2026-11-12",
+    "payment": "UPI",
+    "note": "",
+    "createdAt": "2026-11-12T10:00:00.000Z"
+  },
+  {
+    "id": "1790812801000",
+    "title": "Bus pass recharge",
+    "amount": 450,
+    "category": "Travel",
+    "date": "2026-11-12",
+    "payment": "Cash",
+    "note": "",
+    "createdAt": "2026-11-12T10:00:00.000Z"
+  },
+  {
+    "id": "1790812802000",
+    "title": "Mobile recharge",
+    "amount": 299,
+    "category": "Bills",
+    "date": "2026-11-11",
+    "payment": "UPI",
+    "note": "",
+    "createdAt": "2026-11-11T10:00:00.000Z"
+  },
+  {
+    "id": "1790812803000",
+    "title": "DBMS textbook",
+    "amount": 650,
+    "category": "Education",
+    "date": "2026-11-10",
+    "payment": "Card",
+    "note": "",
+    "createdAt": "2026-11-10T10:00:00.000Z"
+  },
+  {
+    "id": "1790812804000",
+    "title": "Movie with friends",
+    "amount": 380,
+    "category": "Entertainment",
+    "date": "2026-11-09",
+    "payment": "UPI",
+    "note": "",
+    "createdAt": "2026-11-09T10:00:00.000Z"
+  },
+  {
+    "id": "1790812805000",
+    "title": "Groceries",
+    "amount": 1240,
+    "category": "Food",
+    "date": "2026-11-08",
+    "payment": "Card",
+    "note": "",
+    "createdAt": "2026-11-08T10:00:00.000Z"
+  },
+  {
+    "id": "1790812806000",
+    "title": "Auto to college",
+    "amount": 80,
+    "category": "Travel",
+    "date": "2026-11-07",
+    "payment": "Cash",
+    "note": "",
+    "createdAt": "2026-11-07T10:00:00.000Z"
+  },
+  {
+    "id": "1790812807000",
+    "title": "Medicines",
+    "amount": 210,
+    "category": "Health",
+    "date": "2026-11-06",
+    "payment": "Cash",
+    "note": "",
+    "createdAt": "2026-11-06T10:00:00.000Z"
+  },
+  {
+    "id": "1790812808000",
+    "title": "T-shirt",
+    "amount": 799,
+    "category": "Shopping",
+    "date": "2026-11-05",
+    "payment": "Card",
+    "note": "",
+    "createdAt": "2026-11-05T10:00:00.000Z"
+  },
+  {
+    "id": "1790812809000",
+    "title": "Electricity bill",
+    "amount": 1450,
+    "category": "Bills",
+    "date": "2026-11-03",
+    "payment": "Net Banking",
+    "note": "",
+    "createdAt": "2026-11-03T10:00:00.000Z"
+  },
+  {
+    "id": "1790812810000",
+    "title": "Hostel mess fee",
+    "amount": 3500,
+    "category": "Food",
+    "date": "2026-11-01",
+    "payment": "Net Banking",
+    "note": "",
+    "createdAt": "2026-11-01T10:00:00.000Z"
+  },
+  {
+    "id": "1790812811000",
+    "title": "Diwali shopping",
+    "amount": 2600,
+    "category": "Shopping",
+    "date": "2026-10-28",
+    "payment": "Card",
+    "note": "",
+    "createdAt": "2026-10-28T10:00:00.000Z"
+  },
+  {
+    "id": "1790812812000",
+    "title": "Train ticket home",
+    "amount": 640,
+    "category": "Travel",
+    "date": "2026-10-20",
+    "payment": "UPI",
+    "note": "",
+    "createdAt": "2026-10-20T10:00:00.000Z"
+  },
+  {
+    "id": "1790812813000",
+    "title": "Internet bill",
+    "amount": 599,
+    "category": "Bills",
+    "date": "2026-10-15",
+    "payment": "UPI",
+    "note": "",
+    "createdAt": "2026-10-15T10:00:00.000Z"
+  },
+  {
+    "id": "1790812814000",
+    "title": "Online course",
+    "amount": 999,
+    "category": "Education",
+    "date": "2026-10-05",
+    "payment": "Card",
+    "note": "",
+    "createdAt": "2026-10-05T10:00:00.000Z"
+  }
+]
