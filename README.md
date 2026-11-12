@@ -1,55 +1,53 @@
-# 💰 Daily Expense Tracker
+# Daily Expense Tracker
 
-A full-stack expense tracker built with **React (Vite)** on the frontend and **Node.js + Express** on the backend. Data is stored in a JSON file, so no database setup is needed.
+Full-stack expense tracker built with **React (Vite)** and **Node.js + Express**. Data is stored in a JSON file (no database needed).
 
-## Run
+## How to run
 
 ```bash
 git clone <repo-url>
-cd Daily_Expense_Tracker
+cd <project-folder>
 npm install
 npm run dev
 ```
 
-- Frontend: http://localhost:5173 (opens automatically)
-- Backend API: http://localhost:5000/api/expenses
-
-`node_modules` is committed, so `npm install` also works **without internet** on Windows.
+- Frontend: http://localhost:5173
+- Backend: http://localhost:5000/api/expenses
 
 ## Features
 
 - Add, edit and delete expenses (description, amount, category, date, payment mode, note)
-- Dashboard cards: total spent, this month, today, biggest expense
-- Monthly budget with a colour-coded progress bar (green / orange / red)
-- Category donut chart and last-7-days bar chart (pure SVG/CSS, no chart library)
-- Search, filter by category and month, and sort by date or amount
-- Export the filtered list to CSV (opens in Excel)
-- Dark / light mode, toast notifications, responsive mobile layout
-- Server-side validation with clear error messages
+- Total, this month, today and highest expense cards
+- Monthly budget with progress bar
+- Category-wise spending and last 7 days chart
+- Search, filter by category / month, sort
+- Export to CSV
+- Dark mode
+- Input validation on both frontend and backend
 
-## Project structure
+## Folder structure
 
 ```
-server.js                         ← backend entry (main code)
-routes/expenseRoutes.js           ← API routes
-controllers/expenseController.js  ← validation + business logic
-utils/db.js                       ← JSON file read/write
-data/expenses.json, settings.json ← stored data
-src/App.jsx                       ← frontend entry (main code)
-src/main.jsx                      ← React bootstrap
-src/api.js, src/utils.js          ← API calls + helpers
-src/components/                   ← Header, Summary, ExpenseForm, ExpenseList, EditModal
-src/style.css                     ← styles
+server.js               - Express server and expense APIs
+routes/budgetRoutes.js  - budget APIs
+utils/db.js             - read/write JSON files
+utils/validate.js       - expense validation
+data/                   - expenses.json, settings.json
+src/App.jsx             - main React component
+src/main.jsx            - React entry point
+src/api.js              - fetch helper functions
+src/utils.js            - formatting and helper functions
+src/components/         - Navbar, Summary, ExpenseForm, ExpenseList
+src/style.css           - styles
 ```
 
-## API
+## APIs
 
-| Method | URL | Purpose |
+| Method | URL | Use |
 |---|---|---|
-| GET | /api/expenses | List expenses (`?category=&month=&search=`) |
-| GET | /api/expenses/stats | Totals and per-category for a month |
-| GET | /api/expenses/:id | One expense |
+| GET | /api/expenses | Get all expenses |
 | POST | /api/expenses | Add expense |
 | PUT | /api/expenses/:id | Update expense |
 | DELETE | /api/expenses/:id | Delete expense |
-| GET / PUT | /api/budget | Read / set monthly budget |
+| GET | /api/budget | Get monthly budget |
+| PUT | /api/budget | Update monthly budget |

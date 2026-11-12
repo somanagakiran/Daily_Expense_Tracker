@@ -32,8 +32,8 @@ function writeJSON(file, data) {
 }
 
 module.exports = {
-  getExpenses: () => readJSON(EXPENSES_FILE, []),
-  saveExpenses: (list) => writeJSON(EXPENSES_FILE, list),
+  readData: () => readJSON(EXPENSES_FILE, []),
+  saveData: (list) => writeJSON(EXPENSES_FILE, list),
   getSettings: () => ({ ...DEFAULT_SETTINGS, ...readJSON(SETTINGS_FILE, DEFAULT_SETTINGS) }),
   saveSettings: (settings) => writeJSON(SETTINGS_FILE, settings),
 };

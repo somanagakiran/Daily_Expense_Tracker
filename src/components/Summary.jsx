@@ -2,21 +2,20 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { CATEGORIES, money, sum, today, thisMonth, monthName, toISODate, toast } from "../utils";
 
-function StatCard({ icon, label, value, hint, accent }) {
+function Card({ label, value, note, color }) {
   return (
-    <div className="stat" style={{ "--accent": accent }}>
-      <div className="stat-icon">{icon}</div>
-      <p className="stat-label">{label}</p>
-      <h2 className="stat-value">{value}</h2>
-      <small className="stat-hint">{hint}</small>
+    <div className="card" style={{ borderTopColor: color }}>
+      <p className="card-label">{label}</p>
+      <h2 className="card-value">{value}</h2>
+      <p className="card-note">{note}</p>
     </div>
   );
 }
 
-function BudgetCard({ spent }) {
+function Budget({ spent }) {
   const [budget, setBudget] = useState(0);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState("");
+  const [input, setInput] = useState("");
 
   useEffect(() => {
     api.getBudget().then((b) => setBudget(b.monthlyBudget)).catch(() => {});
@@ -25,7 +24,7 @@ function BudgetCard({ spent }) {
   const save = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.setBudget(Number(draft));
+      const res = await api.setBudget(Number(input));
       setBudget(res.monthlyBudget);
       setEditing(false);
       toast("Budget updated");
@@ -36,33 +35,30 @@ function BudgetCard({ spent }) {
 
   const percent = budget ? Math.min(100, (spent / budget) * 100) : 0;
   const left = budget - spent;
-  const level = percent >= 100 ? "danger" : percent >= 80 ? "warn" : "ok";
+  const status = percent >= 100 ? "over" : percent >= 80 ? "warn" : "ok";
 
   return (
-    <div className={`panel budget ${level}`}>
-      <div className="panel-head">
-        <h3>🎯 Monthly budget</h3>
-        {!editing && (
-          <button className="link-btn" onClick={() => { setDraft(budget); setEditing(true); }}>Edit</button>
-        )}
+    <div className="box">
+      <div className="box-head">
+        <h3>Monthly Budget</h3>
+        {!editing && <button className="link" onClick={() => { setInput(budget); setEditing(true); }}>Change</button>}
       </div>
       {editing ? (
-        <form className="budget-form" onSubmit={save}>
-          <input type="number" min="1" value={draft} onChange={(e) => setDraft(e.target.value)} autoFocus />
-          <button className="btn small">Save</button>
-          <button type="button" className="btn ghost small" onClick={() => setEditing(false)}>Cancel</button>
+        <form className="inline-form" onSubmit={save}>
+          <input type="number" min="1" value={input} onChange={(e) => setInput(e.target.value)} autoFocus />
+          <button className="btn btn-primary">Save</button>
+          <button type="button" className="btn" onClick={() => setEditing(false)}>Cancel</button>
         </form>
       ) : (
         <>
-          <div className="budget-numbers">
-            <span><b>{money(spent)}</b> spent</span>
-            <span>of {money(budget)}</span>
-          </div>
-          <div className="progress"><div style={{ width: `${percent}%` }} /></div>
-          <p className="budget-msg">
+          <p className="budget-line">
+            <b>{money(spent)}</b> spent of {money(budget)}
+          </p>
+          <div className={`progress ${status}`}><div style={{ width: `${percent}%` }} /></div>
+          <p className={`budget-status ${status}`}>
             {left >= 0
-              ? `${money(left)} left for ${monthName(thisMonth())} (${percent.toFixed(0)}% used)`
-              : `⚠️ Over budget by ${money(-left)}!`}
+              ? `${money(left)} remaining for ${monthName(thisMonth())} (${percent.toFixed(0)}% used)`
+              : `Budget exceeded by ${money(-left)}`}
           </p>
         </>
       )}
@@ -70,56 +66,29 @@ function BudgetCard({ spent }) {
   );
 }
 
-function CategoryBreakdown({ list }) {
+function CategoryWise({ list }) {
   const total = sum(list);
   const rows = Object.keys(CATEGORIES)
     .map((name) => ({ name, value: sum(list.filter((e) => e.category === name)) }))
     .filter((r) => r.value > 0)
     .sort((a, b) => b.value - a.value);
 
-  // Donut chart built with SVG stroke-dasharray
-  const R = 54, C = 2 * Math.PI * R;
-  let offset = 0;
-
   return (
-    <div className="panel">
-      <div className="panel-head"><h3>📊 This month by category</h3></div>
-      {rows.length === 0 ? (
-        <p className="empty small">No spending this month yet.</p>
-      ) : (
-        <div className="breakdown">
-          <svg viewBox="0 0 140 140" className="donut">
-            <circle cx="70" cy="70" r={R} className="donut-track" />
-            {rows.map((r) => {
-              const len = (r.value / total) * C;
-              const el = (
-                <circle key={r.name} cx="70" cy="70" r={R} fill="none" stroke={CATEGORIES[r.name].color}
-                  strokeWidth="18" strokeDasharray={`${len} ${C - len}`} strokeDashoffset={-offset}
-                  transform="rotate(-90 70 70)"><title>{`${r.name}: ${money(r.value)}`}</title></circle>
-              );
-              offset += len;
-              return el;
-            })}
-            <text x="70" y="66" textAnchor="middle" className="donut-label">Total</text>
-            <text x="70" y="84" textAnchor="middle" className="donut-value">{money(total)}</text>
-          </svg>
-          <ul className="legend">
-            {rows.map((r) => (
-              <li key={r.name}>
-                <span className="dot" style={{ background: CATEGORIES[r.name].color }} />
-                <span className="legend-name">{CATEGORIES[r.name].icon} {r.name}</span>
-                <span className="legend-pct">{((r.value / total) * 100).toFixed(0)}%</span>
-                <b>{money(r.value)}</b>
-              </li>
-            ))}
-          </ul>
+    <div className="box">
+      <div className="box-head"><h3>Category-wise (this month)</h3></div>
+      {rows.length === 0 && <p className="muted">No expenses this month.</p>}
+      {rows.map((r) => (
+        <div key={r.name} className="cat-row">
+          <span className="cat-name">{r.name}</span>
+          <div className="cat-bar"><div style={{ width: `${(r.value / total) * 100}%`, background: CATEGORIES[r.name] }} /></div>
+          <span className="cat-amt">{money(r.value)}</span>
         </div>
-      )}
+      ))}
     </div>
   );
 }
 
-function Last7Days({ list }) {
+function LastWeek({ list }) {
   const days = [...Array(7)].map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
@@ -129,14 +98,14 @@ function Last7Days({ list }) {
   const max = Math.max(...days.map((d) => d.value), 1);
 
   return (
-    <div className="panel">
-      <div className="panel-head"><h3>📈 Last 7 days</h3><span className="muted">{money(sum(days.map((d) => ({ amount: d.value }))))}</span></div>
-      <div className="bars">
+    <div className="box">
+      <div className="box-head"><h3>Last 7 Days</h3></div>
+      <div className="week">
         {days.map((d) => (
-          <div key={d.iso} className={`bar-col ${d.iso === today() ? "is-today" : ""}`} title={`${d.label}: ${money(d.value)}`}>
-            <span className="bar-amt">{d.value ? money(d.value) : ""}</span>
-            <div className="bar" style={{ height: `${(d.value / max) * 100}%` }} />
-            <span className="bar-label">{d.label}</span>
+          <div key={d.iso} className={`week-col ${d.iso === today() ? "today" : ""}`} title={money(d.value)}>
+            <small>{d.value ? money(d.value) : "-"}</small>
+            <div className="week-bar" style={{ height: `${(d.value / max) * 100}%` }} />
+            <span>{d.label}</span>
           </div>
         ))}
       </div>
@@ -144,25 +113,24 @@ function Last7Days({ list }) {
   );
 }
 
-export default function Summary({ expenses }) {
+export default function Summary({ expenses, total }) {
   const monthList = expenses.filter((e) => e.date.startsWith(thisMonth()));
   const todayList = expenses.filter((e) => e.date === today());
-  const daysSoFar = new Date().getDate();
-  const biggest = monthList.reduce((m, e) => (Number(e.amount) > Number(m?.amount || 0) ? e : m), null);
+  const highest = monthList.reduce((m, e) => (Number(e.amount) > Number(m?.amount || 0) ? e : m), null);
 
   return (
-    <section className="summary">
-      <div className="stats">
-        <StatCard icon="💰" label="Total spent" value={money(sum(expenses))} hint={`${expenses.length} transactions`} accent="#6366f1" />
-        <StatCard icon="🗓️" label="This month" value={money(sum(monthList))} hint={`Avg ${money(sum(monthList) / daysSoFar)} / day`} accent="#0ea5e9" />
-        <StatCard icon="☀️" label="Today" value={money(sum(todayList))} hint={`${todayList.length} expense${todayList.length === 1 ? "" : "s"} today`} accent="#f97316" />
-        <StatCard icon="🔥" label="Biggest this month" value={biggest ? money(biggest.amount) : "—"} hint={biggest ? biggest.title : "Nothing yet"} accent="#ef4444" />
+    <>
+      <div className="cards">
+        <Card label="Total Expenses" value={money(total)} note={`${expenses.length} entries`} color="#2c3e50" />
+        <Card label="This Month" value={money(sum(monthList))} note={`${monthList.length} entries`} color="#2980b9" />
+        <Card label="Today" value={money(sum(todayList))} note={`${todayList.length} entries`} color="#27ae60" />
+        <Card label="Highest (this month)" value={highest ? money(highest.amount) : "-"} note={highest ? highest.title : "No data"} color="#c0392b" />
       </div>
-      <div className="grid-3">
-        <BudgetCard spent={sum(monthList)} />
-        <CategoryBreakdown list={monthList} />
-        <Last7Days list={expenses} />
+      <div className="row-3">
+        <Budget spent={sum(monthList)} />
+        <CategoryWise list={monthList} />
+        <LastWeek list={expenses} />
       </div>
-    </section>
+    </>
   );
 }
