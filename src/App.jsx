@@ -8,33 +8,27 @@ function App() {
   const [expenses, setExpenses] = useState([]);
   const [editItem, setEditItem] = useState(null);
 
-  const loadExpenses = () => {
-    fetch("/api/expenses")
-      .then((res) => res.json())
-      .then((data) => setExpenses(data));
+  const loadExpenses = async () => {
+    const res = await fetch("/api/expenses");
+    setExpenses(await res.json());
+  };
+
+  const deleteExpense = async (id) => {
+    await fetch("/api/expenses/" + id, { method: "DELETE" });
+    loadExpenses();
   };
 
   useEffect(() => {
     loadExpenses();
   }, []);
 
-  const deleteExpense = async (id) => {
-    if (!window.confirm("Delete this expense?")) return;
-    await fetch(`/api/expenses/${id}`, { method: "DELETE" });
-    loadExpenses();
-  };
-
-  const total = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
-
   return (
-    <>
+    <div>
       <Navbar />
-      <div className="container">
-        <Summary expenses={expenses} total={total} />
-        <ExpenseForm editItem={editItem} setEditItem={setEditItem} onSave={loadExpenses} />
-        <ExpenseList expenses={expenses} onEdit={setEditItem} onDelete={deleteExpense} />
-      </div>
-    </>
+      <Summary expenses={expenses} />
+      <ExpenseForm editItem={editItem} setEditItem={setEditItem} loadExpenses={loadExpenses} />
+      <ExpenseList expenses={expenses} setEditItem={setEditItem} deleteExpense={deleteExpense} />
+    </div>
   );
 }
 

@@ -9,13 +9,13 @@ To develop a full-stack **Daily Expense Tracker** web application using **React.
 3. Install the packages:
    `npm install express cors react react-dom`
    `npm install -D vite @vitejs/plugin-react concurrently`
-4. Create `server.js` (backend) using Express. Use the `cors()` and `express.json()` middleware.
+4. Create `server.js` (backend) using Express. Use the `cors()`, `express.json()` and `validate` middleware.
 5. Write REST APIs in server.js:
    - `GET /api/expenses` → view all expenses
    - `POST /api/expenses` → add an expense
    - `PUT /api/expenses/:id` → update an expense
    - `DELETE /api/expenses/:id` → delete an expense
-   The data is stored in the `data/expenses.json` file.
+   Each route calls one function from `utils/db.js` (`getAll`, `add`, `update`, `remove`), which stores the data in `data/expenses.json`.
 6. Create `src/App.jsx` (frontend). Use `useState` to store the expenses and `useEffect` + `fetch()` to load them from the backend.
 7. Create the components `Navbar`, `Summary`, `ExpenseForm` and `ExpenseList`, and pass data and functions to them using props.
 8. In `vite.config.js`, set a proxy so that `/api` requests go to `http://localhost:5000`.
@@ -48,33 +48,27 @@ function App() {
   const [expenses, setExpenses] = useState([]);
   const [editItem, setEditItem] = useState(null);
 
-  const loadExpenses = () => {
-    fetch("/api/expenses")
-      .then((res) => res.json())
-      .then((data) => setExpenses(data));
+  const loadExpenses = async () => {
+    const res = await fetch("/api/expenses");
+    setExpenses(await res.json());
+  };
+
+  const deleteExpense = async (id) => {
+    await fetch("/api/expenses/" + id, { method: "DELETE" });
+    loadExpenses();
   };
 
   useEffect(() => {
     loadExpenses();
   }, []);
 
-  const deleteExpense = async (id) => {
-    if (!window.confirm("Delete this expense?")) return;
-    await fetch(`/api/expenses/${id}`, { method: "DELETE" });
-    loadExpenses();
-  };
-
-  const total = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
-
   return (
-    <>
+    <div>
       <Navbar />
-      <div className="container">
-        <Summary expenses={expenses} total={total} />
-        <ExpenseForm editItem={editItem} setEditItem={setEditItem} onSave={loadExpenses} />
-        <ExpenseList expenses={expenses} onEdit={setEditItem} onDelete={deleteExpense} />
-      </div>
-    </>
+      <Summary expenses={expenses} />
+      <ExpenseForm editItem={editItem} setEditItem={setEditItem} loadExpenses={loadExpenses} />
+      <ExpenseList expenses={expenses} setEditItem={setEditItem} deleteExpense={deleteExpense} />
+    </div>
   );
 }
 
@@ -85,34 +79,29 @@ export default App;
 ```js
 const express = require("express");
 const cors = require("cors");
-const { readData, saveData } = require("./utils/db");
+const db = require("./utils/db");
 const validate = require("./utils/validate");
-const budgetRoutes = require("./routes/budgetRoutes");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use("/api/expenses", validate);
 
-app.get("/api/expenses", (req, res) => res.json(readData()));
-
-app.post("/api/expenses", validate, (req, res) => {
-  const expense = { id: Date.now().toString(), ...req.body };
-  saveData([...readData(), expense]);
-  res.status(201).json(expense);
+app.get("/api/expenses", (req, res) => {
+  res.json(db.getAll());
 });
 
-app.put("/api/expenses/:id", validate, (req, res) => {
-  const expenses = readData().map((e) => (e.id === req.params.id ? { ...e, ...req.body } : e));
-  saveData(expenses);
-  res.json({ message: "Expense updated" });
+app.post("/api/expenses", (req, res) => {
+  res.json(db.add(req.body));
+});
+
+app.put("/api/expenses/:id", (req, res) => {
+  res.json(db.update(req.params.id, req.body));
 });
 
 app.delete("/api/expenses/:id", (req, res) => {
-  saveData(readData().filter((e) => e.id !== req.params.id));
-  res.json({ message: "Expense deleted" });
+  res.json(db.remove(req.params.id));
 });
-
-app.use("/api/budget", budgetRoutes);
 
 app.listen(5000, () => console.log("Server running on port 5000"));
 ```
@@ -135,34 +124,42 @@ app.listen(5000, () => console.log("Server running on port 5000"));
 
 ## HOW TO REMEMBER
 
-### server.js — 6 blocks (top to bottom)
-| # | Block | Key line |
+### server.js — Top, Middle, Bottom
+**TOP (8 lines):**
+- 4 requires → `express`, `cors`, `db`, `validate`
+- `const app = express();`
+- 3 `app.use` → `cors()`, `express.json()`, `("/api/expenses", validate)`
+
+**MIDDLE: 4 routes, all the SAME shape.** Only the method and the db function change:
+
+| Route | URL | Inside |
 |---|---|---|
-| 1 | 5 requires | express, cors, `{ readData, saveData }`, validate, budgetRoutes |
-| 2 | app + 2 middlewares | `app.use(cors())`, `app.use(express.json())` |
-| 3 | **GET** (1 line) | `res.json(readData())` |
-| 4 | **POST** (3 lines) | make expense with `id: Date.now()` → save `[...old, new]` → 201 |
-| 5 | **PUT** (3 lines) | `map`: if id matches, merge `{ ...e, ...req.body }` → save → "updated" |
-| 6 | **DELETE** (2 lines), budget route, listen | `filter` out the id → save; `app.listen(5000)` |
+| `app.get` | `/api/expenses` | `res.json(db.getAll())` |
+| `app.post` | `/api/expenses` | `res.json(db.add(req.body))` |
+| `app.put` | `/api/expenses/:id` | `res.json(db.update(req.params.id, req.body))` |
+| `app.delete` | `/api/expenses/:id` | `res.json(db.remove(req.params.id))` |
 
-Trick: **G-P-P-D** = Get, Post, Put, Delete.
-- **POST and PUT have `validate`** between the URL and `(req, res)`. It is a middleware that checks the data (400 error) and, for PUT, whether the id exists (404 error).
-- **POST adds** → spread `[...readData(), expense]`
-- **PUT changes** → `map`
-- **DELETE removes** → `filter`
+Tricks:
+- **G-P-P-D** = Get, Post, Put, Delete
+- **get / add / update / remove**: the db functions are plain English words
+- **POST and PUT send data**, so they have `req.body`
+- **PUT and DELETE need an id**, so they have `:id` in the URL and `req.params.id`
 
-Viva answer: *"`validate` is a middleware. It runs before the route, checks the input and calls `next()` if the data is valid."*
+**BOTTOM (1 line):** `app.listen(5000, ...)`
 
-### App.jsx — 5 blocks
-| # | Block | Key line |
+### App.jsx — Store, Load, Delete, Effect, Show
+| # | Part | Code |
 |---|---|---|
-| 1 | imports | 2 hooks + 4 components (Navbar, Summary, ExpenseForm, ExpenseList) |
-| 2 | 2 states | `expenses` = `[]`, `editItem` = `null` |
-| 3 | loadExpenses + useEffect | fetch → res.json() → setExpenses; useEffect with `[]` |
-| 4 | deleteExpense + total | confirm → fetch DELETE → loadExpenses; `reduce` for total |
-| 5 | return | Navbar, then container with Summary, ExpenseForm, ExpenseList |
+| 1 | **Store** | 2 `useState` → `expenses` = `[]`, `editItem` = `null` |
+| 2 | **Load** | `fetch` → `setExpenses(await res.json())` |
+| 3 | **Delete** | `fetch` with `method: "DELETE"` → `loadExpenses()` |
+| 4 | **Effect** | `useEffect` → call `loadExpenses()` once (`[]`) |
+| 5 | **Show** | `Navbar`, `Summary`, `ExpenseForm`, `ExpenseList` |
 
-Props trick: **Summary** gets *expenses + total*. **Form** gets *editItem, setEditItem, onSave*. **List** gets *expenses, onEdit, onDelete*.
+**Golden rule for props:** the prop name is ALWAYS the same as the value.
+- Summary → `expenses={expenses}`
+- ExpenseForm → `editItem`, `setEditItem`, `loadExpenses`
+- ExpenseList → `expenses`, `setEditItem`, `deleteExpense`
 
 ---
 
@@ -170,7 +167,9 @@ Props trick: **Summary** gets *expenses + total*. **Form** gets *editItem, setEd
 | Problem | Fix |
 |---|---|
 | `npm install` fails (no internet) | Ignore it and run `npm run dev`. `node_modules` is already in the repo. |
-| `EADDRINUSE: port 5000` | Close the old terminal (Ctrl+C) or restart VS Code, then run again |
+| `EADDRINUSE: port 5000` | Run `taskkill /IM node.exe /F`, then `npm run dev` again |
+| `cd ~\Desktop` error | Skip that line. You can clone anywhere. |
+| `destination path already exists` | Just `cd Daily_Expense_Tracker` and continue |
 | Browser didn't open | Open http://localhost:5173 yourself |
 | Page shows but no data | Check that the terminal shows `[server] Server running on port 5000` |
 
@@ -182,11 +181,11 @@ Props trick: **Summary** gets *expenses + total*. **Form** gets *editItem, setEd
 
 **Step 1: write the paper first.** Aim → Procedure → App.jsx → server.js → Expected output. Leave Original output empty for now.
 
-**Step 2: check the PC.** In VS Code, open the terminal (menu Terminal → New Terminal) and run `node -v` and `git -v`. Both must show a version number.
+**Step 2: check the PC.** In VS Code, open the terminal (menu Terminal → New Terminal) and run `node -v` and `git --version`. Both must show a version number.
 
 **Step 3: clone and run**
 ```
-cd Desktop
+cd ~\Desktop
 git clone https://github.com/somanagakiran/Daily_Expense_Tracker.git
 cd Daily_Expense_Tracker
 npm install
@@ -215,7 +214,7 @@ Wait for **both** lines: `[server] Server running on port 5000` and `Local: http
 
 **Q: What is unique in your project?**
 > 1. Edit/update of expenses, not just add and delete
-> 2. A monthly budget with a progress bar that turns green, orange or red
+> 2. A monthly budget (saved in the browser) with a progress bar that turns green, orange or red
 > 3. Category-wise spending and a last 7 days chart, made without any chart library
 > 4. Search, filter by category and month, and sorting
 > 5. Export to CSV, which opens in Excel
@@ -247,7 +246,7 @@ Wait for **both** lines: `[server] Server running on port 5000` and `Local: http
 > A Node.js framework that makes it easy to create a server and APIs.
 
 **Q: What is middleware?**
-> A function that runs **before** the route handler. `express.json()` reads the JSON body, `cors()` allows requests from the frontend, and `validate` checks the input and calls `next()` if the data is valid.
+> A function that runs **before** the route handler. `express.json()` reads the JSON body, `cors()` allows requests from the frontend, and `validate` checks the data (400 error), checks the id exists (404 error), and calls `next()` if everything is OK.
 
 **Q: Why use cors?**
 > The frontend (5173) and backend (5000) run on different ports. The browser blocks these requests by default, and CORS allows them.
@@ -265,7 +264,7 @@ Wait for **both** lines: `[server] Server running on port 5000` and `Local: http
 > 200 = OK, 201 = Created, 400 = Bad request (invalid data), 404 = Not found, 500 = Server error.
 
 **Q: Where is the data stored?**
-> In `data/expenses.json`. `readData()` reads the file and `saveData()` writes it, using Node's `fs` module.
+> In `data/expenses.json`. The functions in `utils/db.js` (`getAll`, `add`, `update`, `remove`) read and write this file using Node's `fs` module.
 
 **Q: Why not MongoDB?**
 > For a small personal tracker, a JSON file is enough and needs no installation. It can be moved to MongoDB later.
@@ -274,7 +273,7 @@ Wait for **both** lines: `[server] Server running on port 5000` and `Local: http
 > With `Date.now()`, the current time in milliseconds, so every id is unique.
 
 **Q: What are map, filter and spread?**
-> Spread `[...old, new]` adds an item (POST). `map` changes an item (PUT). `filter` removes an item (DELETE).
+> They are used inside `db.js`. Spread `[...old, new]` adds an item, `map` changes an item, and `filter` removes an item.
 
 ### Frontend (App.jsx)
 
@@ -297,10 +296,10 @@ Wait for **both** lines: `[server] Server running on port 5000` and `Local: http
 > A browser function used to call APIs. I use it to call my backend.
 
 **Q: What is async/await?**
-> It waits for a task, like an API call, to finish before going to the next line.
+> It waits for a task, like an API call, to finish before going to the next line. In `loadExpenses`, `await fetch(...)` waits for the server reply.
 
 **Q: What is reduce?**
-> It combines all the array items into one value. I use it to calculate the total amount.
+> It combines all the array items into one value. It is used in the Summary component to calculate the total amount.
 
 **Q: What is JSX?**
 > HTML-like syntax written inside JavaScript in React.

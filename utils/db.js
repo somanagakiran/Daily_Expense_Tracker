@@ -2,38 +2,49 @@ const fs = require("fs");
 const path = require("path");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
-const EXPENSES_FILE = path.join(DATA_DIR, "expenses.json");
-const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
+const FILE = path.join(DATA_DIR, "expenses.json");
 
-const DEFAULT_SETTINGS = { monthlyBudget: 15000 };
-
-function ensureFile(file, fallback) {
+// Read all expenses from the JSON file
+function readData() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify(fallback, null, 2));
-}
-
-function readJSON(file, fallback) {
-  ensureFile(file, fallback);
+  if (!fs.existsSync(FILE)) fs.writeFileSync(FILE, "[]");
   try {
-    const text = fs.readFileSync(file, "utf8");
-    return text.trim() ? JSON.parse(text) : fallback;
+    const text = fs.readFileSync(FILE, "utf8");
+    return text.trim() ? JSON.parse(text) : [];
   } catch (err) {
-    console.error(`Could not read ${path.basename(file)}, using defaults:`, err.message);
-    return fallback;
+    console.error("Could not read expenses.json:", err.message);
+    return [];
   }
 }
 
-function writeJSON(file, data) {
-  ensureFile(file, data);
-  // Write to a temp file first, then rename, so a crash never leaves a half-written file.
-  const tmp = `${file}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
-  fs.renameSync(tmp, file);
+// Save all expenses to the JSON file (temp file + rename, so a crash never leaves a half-written file)
+function saveData(list) {
+  const tmp = FILE + ".tmp";
+  fs.writeFileSync(tmp, JSON.stringify(list, null, 2));
+  fs.renameSync(tmp, FILE);
 }
 
-module.exports = {
-  readData: () => readJSON(EXPENSES_FILE, []),
-  saveData: (list) => writeJSON(EXPENSES_FILE, list),
-  getSettings: () => ({ ...DEFAULT_SETTINGS, ...readJSON(SETTINGS_FILE, DEFAULT_SETTINGS) }),
-  saveSettings: (settings) => writeJSON(SETTINGS_FILE, settings),
-};
+// ---------- functions used by server.js ----------
+
+function getAll() {
+  return readData();
+}
+
+function add(expense) {
+  const newExpense = { id: Date.now().toString(), ...expense };
+  saveData([...readData(), newExpense]);
+  return newExpense;
+}
+
+function update(id, changes) {
+  const list = readData().map((e) => (e.id === id ? { ...e, ...changes } : e));
+  saveData(list);
+  return list.find((e) => e.id === id);
+}
+
+function remove(id) {
+  saveData(readData().filter((e) => e.id !== id));
+  return { message: "Expense deleted" };
+}
+
+module.exports = { readData, saveData, getAll, add, update, remove };

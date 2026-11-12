@@ -18,7 +18,7 @@ npm run dev
 
 - Add, edit and delete expenses (description, amount, category, date, payment mode, note)
 - Total, this month, today and highest expense cards
-- Monthly budget with progress bar
+- Monthly budget with progress bar (saved in the browser)
 - Category-wise spending and last 7 days chart
 - Search, filter by category / month, sort
 - Export to CSV
@@ -29,13 +29,12 @@ npm run dev
 
 ```
 server.js               - Express server and expense APIs
-routes/budgetRoutes.js  - budget APIs
-utils/db.js             - read/write JSON files
-utils/validate.js       - expense validation
-data/                   - expenses.json, settings.json
+utils/db.js             - getAll / add / update / remove (JSON file)
+utils/validate.js       - validation middleware (400 / 404 errors)
+data/expenses.json      - stored expenses
 src/App.jsx             - main React component
 src/main.jsx            - React entry point
-src/api.js              - fetch helper functions
+src/api.js              - fetch helpers for add / update
 src/utils.js            - formatting and helper functions
 src/components/         - Navbar, Summary, ExpenseForm, ExpenseList
 src/style.css           - styles
@@ -49,5 +48,3 @@ src/style.css           - styles
 | POST | /api/expenses | Add expense |
 | PUT | /api/expenses/:id | Update expense |
 | DELETE | /api/expenses/:id | Delete expense |
-| GET | /api/budget | Get monthly budget |
-| PUT | /api/budget | Update monthly budget |

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { CATEGORIES, PAYMENT_MODES, emptyForm, toast } from "../utils";
 
-export default function ExpenseForm({ editItem, setEditItem, onSave }) {
+export default function ExpenseForm({ editItem, setEditItem, loadExpenses }) {
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
   const ref = useRef(null);
@@ -41,7 +41,7 @@ export default function ExpenseForm({ editItem, setEditItem, onSave }) {
         toast("Expense added");
         setForm({ ...emptyForm(), date: form.date });
       }
-      onSave();
+      loadExpenses();
     } catch (err) {
       toast(err.message, "error");
     } finally {

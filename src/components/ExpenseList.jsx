@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CATEGORIES, money, prettyDate, monthName, sum, exportCSV } from "../utils";
+import { CATEGORIES, money, prettyDate, monthName, sum, exportCSV, toast } from "../utils";
 
 const SORTS = {
   newest: (a, b) => b.date.localeCompare(a.date) || Number(b.id) - Number(a.id),
@@ -8,7 +8,7 @@ const SORTS = {
   low: (a, b) => a.amount - b.amount,
 };
 
-export default function ExpenseList({ expenses, onEdit, onDelete }) {
+export default function ExpenseList({ expenses, setEditItem, deleteExpense }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [month, setMonth] = useState("All");
@@ -85,8 +85,17 @@ export default function ExpenseList({ expenses, onEdit, onDelete }) {
                   <td>{item.payment || "Cash"}</td>
                   <td className="right amount">{money(item.amount)}</td>
                   <td className="center nowrap">
-                    <button className="btn btn-small" onClick={() => onEdit(item)}>Edit</button>
-                    <button className="btn btn-small btn-danger" onClick={() => onDelete(item.id)}>Delete</button>
+                    <button className="btn btn-small" onClick={() => setEditItem(item)}>Edit</button>
+                    <button
+                      className="btn btn-small btn-danger"
+                      onClick={async () => {
+                        if (!window.confirm(`Delete "${item.title}" (${money(item.amount)})?`)) return;
+                        await deleteExpense(item.id);
+                        toast("Expense deleted");
+                      }}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}

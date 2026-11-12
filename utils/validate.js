@@ -20,27 +20,32 @@ function check(body) {
   return null;
 }
 
-// Express middleware used on POST and PUT routes:
-// - for PUT, returns 404 if the expense does not exist
-// - returns 400 with a message if the data is invalid
-// - otherwise cleans req.body (only allowed fields, amount as number) and continues
+// Middleware for every /api/expenses request (mounted with app.use in server.js)
+//  - PUT / DELETE: 404 if the expense id does not exist
+//  - POST / PUT:   400 if the data is invalid, otherwise clean req.body
+//  - then next() passes the request to the route in server.js
 function validate(req, res, next) {
-  if (req.params.id && !readData().some((e) => e.id === req.params.id)) {
+  const id = req.path.slice(1); // "/123" -> "123"
+
+  if ((req.method === "PUT" || req.method === "DELETE") && !readData().some((e) => e.id === id)) {
     return res.status(404).json({ message: "Expense not found" });
   }
 
-  const error = check(req.body);
-  if (error) return res.status(400).json({ message: error });
+  if (req.method === "POST" || req.method === "PUT") {
+    const error = check(req.body || {});
+    if (error) return res.status(400).json({ message: error });
 
-  const { title, amount, category, date, payment, note } = req.body;
-  req.body = {
-    title: String(title).trim(),
-    amount: Math.round(Number(amount) * 100) / 100,
-    category,
-    date,
-    payment: payment || "Cash",
-    note: String(note || "").trim(),
-  };
+    const { title, amount, category, date, payment, note } = req.body;
+    req.body = {
+      title: String(title).trim(),
+      amount: Math.round(Number(amount) * 100) / 100,
+      category,
+      date,
+      payment: payment || "Cash",
+      note: String(note || "").trim(),
+    };
+  }
+
   next();
 }
 

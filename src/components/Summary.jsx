@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { api } from "../api";
 import { CATEGORIES, money, sum, today, thisMonth, monthName, toISODate, toast } from "../utils";
 
 function Card({ label, value, note, color }) {
@@ -12,25 +11,34 @@ function Card({ label, value, note, color }) {
   );
 }
 
+const DEFAULT_BUDGET = 15000;
+
+function loadBudget() {
+  try {
+    const saved = Number(localStorage.getItem("monthlyBudget"));
+    return saved > 0 ? saved : DEFAULT_BUDGET;
+  } catch {
+    return DEFAULT_BUDGET;
+  }
+}
+
+// Monthly budget is saved in the browser (localStorage)
 function Budget({ spent }) {
-  const [budget, setBudget] = useState(0);
+  const [budget, setBudget] = useState(loadBudget);
   const [editing, setEditing] = useState(false);
   const [input, setInput] = useState("");
 
   useEffect(() => {
-    api.getBudget().then((b) => setBudget(b.monthlyBudget)).catch(() => {});
-  }, []);
+    try { localStorage.setItem("monthlyBudget", budget); } catch {}
+  }, [budget]);
 
-  const save = async (e) => {
+  const save = (e) => {
     e.preventDefault();
-    try {
-      const res = await api.setBudget(Number(input));
-      setBudget(res.monthlyBudget);
-      setEditing(false);
-      toast("Budget updated");
-    } catch (err) {
-      toast(err.message, "error");
-    }
+    const value = Math.round(Number(input));
+    if (!(value > 0)) return toast("Budget must be greater than 0", "error");
+    setBudget(value);
+    setEditing(false);
+    toast("Budget updated");
   };
 
   const percent = budget ? Math.min(100, (spent / budget) * 100) : 0;
@@ -113,7 +121,8 @@ function LastWeek({ list }) {
   );
 }
 
-export default function Summary({ expenses, total }) {
+export default function Summary({ expenses }) {
+  const total = sum(expenses);
   const monthList = expenses.filter((e) => e.date.startsWith(thisMonth()));
   const todayList = expenses.filter((e) => e.date === today());
   const highest = monthList.reduce((m, e) => (Number(e.amount) > Number(m?.amount || 0) ? e : m), null);
